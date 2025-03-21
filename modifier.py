@@ -30,7 +30,7 @@ client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
 def rag_page():
     st.markdown("<hr>", unsafe_allow_html=True)
-    model_option = st.selectbox("Select a model Fari (I'll get more options for you dw)", ("gpt-4o-mini", "gpt-4o"))
+    model_option = st.selectbox("Select a model Fari (I'll get more options for you dw)", ("gpt-4o-mini", "o1-mini"))
     if model_option: 
         st.session_state.model = model_option
     st.markdown("""
