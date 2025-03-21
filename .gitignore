@@ -129,6 +129,7 @@ celerybeat.pid
 
 # Environments
 .env
+fari-biology-prompt-modifiier
 .venv
 env/
 venv/
