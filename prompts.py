@@ -23,8 +23,9 @@ You are a [expert-title]. Your goal is to [task].
 [Define seperated sections that go in a flow for the user to be able to understand the concept thorougly] 
 
 ### OUTPUT FORMAT ### 
-* Within the output tag should be a Markdown Text. 
-// additional output details of how the Markdown explanation should be structured. 
+* The output should be structured in bullet points.  
+// additional output details of how the explanation should be structured. 
+// structure the output according to the requirement
 
 ```
 
@@ -38,5 +39,5 @@ You are a [expert-title]. Your goal is to [task].
 {}
 
 ### OUTPUT THE PROMPT SHOULD PROVIDE ### 
-The output should always be a structured and beautiful markdown text, that explains the process thorougly.  
+The output should always be structured in a flow that explains the process thorougly.  
 """
