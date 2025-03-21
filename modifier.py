@@ -3,9 +3,6 @@ from prompts import meta_prompt
 import openai 
 import dotenv 
 import os 
-import re 
-import json 
-import pymupdf4llm
 
 dotenv.load_dotenv(override=True)
 
@@ -59,7 +56,14 @@ def rag_page():
         st.markdown("Enter any prompt you need into the `user prompt box` box to interact and extract information from the pdf. The output of your prompt will be provided below. This prompt will also be used by the system as a reference to generate a more refined version of itself.")
         normal_prompt = st.text_area("user prompt box", height=800, placeholder="Enter your prompt here...")
 
-        outputBtn = st.button("Generate Outputs")
+        output_btn_col, clear_btn_col, _ = st.columns([1, 1, 3]) 
+        with output_btn_col: 
+            outputBtn = st.button("Generate")
+        with clear_btn_col: 
+            clearBtn = st.button("Clear")
+
+            if clearBtn: 
+                st.session_state.engineered_prompt = "Cleared prompt. Enter a new one fari..."
     
     if normal_prompt and outputBtn:
         engineered_prompt = meta_prompt.format(normal_prompt)  
@@ -137,7 +141,6 @@ def main():
     
     if ("engineered_prompt" not in st.session_state) : 
         st.session_state.engineered_prompt = "Engineered prompt will appear here..."
-
     
     if ("model" not in st.session_state): 
         st.session_state.model = "gpt-4o-mini"
