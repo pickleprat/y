@@ -28,12 +28,11 @@ OPENAI_API_KEY : str = os.getenv("OPENAI_API_KEY")
 
 client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
-def extract_markdown_per_page(pdf_path):
-    page_chunks = pymupdf4llm.to_markdown(pdf_path, page_chunks=True)
-    markdown_list = [page_chunk['text'] for page_chunk in page_chunks]
-    return markdown_list
-
 def rag_page():
+    st.markdown("<hr>", unsafe_allow_html=True)
+    model_option = st.selectbox("Select a model Fari (I'll get more options for you dw)", ("gpt-4o-mini", "gpt-4o"))
+    if model_option: 
+        st.session_state.model = model_option
     st.markdown("""
                 <hr>
                 <h3 
@@ -96,20 +95,16 @@ def rag_page():
         if normal_prompt and outputBtn:
             st.write(f"Processed output for: {normal_prompt}")
             with st.spinner("Normal text output..."): 
-                if "markdown_pages" in st.session_state: 
-                    normal_prompt = (normal_prompt + "### TEXT CONTENT ###\n" +  
-                        ".".join(st.session_state.markdown_pages) ) 
+                response = client.chat.completions.create(
+                    model=st.session_state.model, 
+                    temperature=0.1, 
+                    messages=[{
+                        "role": "user", 
+                        "content": normal_prompt, 
+                    }], 
+                ) 
 
-                    response = client.chat.completions.create(
-                        model=st.session_state.model, 
-                        temperature=0.1, 
-                        messages=[{
-                            "role": "user", 
-                            "content": normal_prompt, 
-                        }], 
-                    ) 
-
-                    st.markdown(response.choices[0].message.content) 
+                st.markdown(response.choices[0].message.content) 
 
         else:
             st.write("No user prompt provided.")
@@ -120,9 +115,6 @@ def rag_page():
             with st.spinner("Output for Engineered prompt..."):
                 actual_prompt_to_send = st.session_state.engineered_prompt
                 
-                if "markdown_pages" in st.session_state:
-                    actual_prompt_to_send += "### PDF CONTENT###\n" + ".".join(st.session_state.markdown_pages)
-                
                 response = client.chat.completions.create(
                     model=st.session_state.model, 
                     temperature=0.1, 
@@ -131,29 +123,21 @@ def rag_page():
                         "content": actual_prompt_to_send, 
                     }], 
                 )
+                response_content = response.choices[0].message.content
+                if response_content.startswith("```markdown"): 
+                    response_content = response_content.split("```markdown")[1] 
+                elif response_content.startswith("```"): 
+                    response_content = response_content.split("```")[1]
+                if response_content.endswith("```"): 
+                    response_content = response_content.split("```")[0]
                 
-                try:
-                    response_content = response.choices[0].message.content
-                    if re.findall(r"<output>(.*?)</output>", response_content, re.DOTALL):
-                        json_content = re.findall(r"<output>(.*?)</output>", response_content, re.DOTALL)[0]
-                        if json_content.startswith("```json"):
-                            json_content = json_content.split("```json")[1].split("```")[0]
-                        js_dict = json.loads(json_content)
-                        st.json(js_dict)
-                    else:
-                        st.code(response_content)
-                except Exception as e:
-                    st.markdown(response.choices[0].message.content)
-                    print(f"Error processing response: {e}")
+                st.markdown(response_content) 
 
 def main():
     
     if ("engineered_prompt" not in st.session_state) : 
         st.session_state.engineered_prompt = "Engineered prompt will appear here..."
 
-    # if ("markdown_pages" not in st.session_state) : 
-    #     pdf_path: str = "./assets/acceptable-policies.pdf" 
-    #     st.session_state.markdown_pages = extract_markdown_per_page(pdf_path)
     
     if ("model" not in st.session_state): 
         st.session_state.model = "gpt-4o-mini"
@@ -175,7 +159,6 @@ def main():
             unsafe_allow_html=True
         )
 
-    # url = "https://atp2025.theopeneyes.com/sample/ATP2025-GenAIAcceptableUSPolicySample.pdf"
 
     with oess: 
         st.image(
@@ -189,30 +172,6 @@ def main():
             width=195, 
         )
 
-    # st.markdown(
-    #     """
-    #     <hr>
-    #     <div style="text-align: center; margin-top: 10px; ">
-    #         <h3 style="font-size: 25px;">About Policy Information used in this demo</h3>
-    #         <p style="margin-left: 180px; margin-right: 180px; font-size: 15px; margin-bottom: 2px; ">The Policy provided below is a sample policy outlining guidelines for the safe and responsible use of AI technology in the workplace. </p>
-    #         <p style="margin-left: 180px; margin-right: 180px; font-size: 15px; margin-bottom: 2px; ">It defines key terms, details security best practices, and explains staff responsibilities for using AI tools ethically and securely.</p>
-    #     </div>
-    #     """, 
-    #     unsafe_allow_html=True
-    # ) 
-
-    # st.markdown(
-    #     f"""
-    #     <div style="text-align: center; margin-top: 20px;">
-    #         <a href="{url}" target="_blank">
-    #             <button style="font-size:16px; margin-top: -70px; margin-bottom: 30px; padding:10px 20px; cursor:pointer; border: solid black 3px; background-color: rgb(14, 205, 142); border-radius: 20px; ">
-    #                 View Policy 
-    #             </button>
-    #         </a>
-    #     </div>
-    #     """,
-    #     unsafe_allow_html=True
-    # ) 
     rag_page()
 
 if __name__ == "__main__":
